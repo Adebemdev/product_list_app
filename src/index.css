@@ -1,13 +1,64 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: inherit;
+  }
+
+  body {
+    box-sizing: border-box;
+    background-color: hsl(13, 31%, 94%);
+  }
+
+  html {
+    font-size: 62.5%;
+  }
+
+  img {
+    width: 100%;
+  }
+
+  /* Define the regular variable font */
+  @font-face {
+    font-family: 'Red Hat Text';
+    src: url('./fonts/RedHatText-VariableFont_wght.ttf')
+      format('truetype-variations');
+    font-weight: 100 700;
+    font-style: normal;
+  }
+
+  /* Define the italic variable font */
+  @font-face {
+    font-family: 'RedHatText';
+    src: url('./fonts/RedHatText-Italic-VariableFont_wght.ttf')
+      format('truetype-variations');
+    font-weight: 100 700;
+    font-style: italic;
+  }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@layer components {
+}
+
+@layer utilities {
+  .img-container {
+    position: relative;
+  }
+
+  .btn {
+    position: absolute;
+    top: 75%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .btn--rose {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
 }
