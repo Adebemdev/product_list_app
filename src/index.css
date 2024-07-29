@@ -56,14 +56,13 @@
     transform: translate(-50%, -50%);
   }
   .btn--rose {
-    display: none;
     position: absolute;
-    top: 75%;
+    top: 55%;
     left: 50%;
     transform: translate(-50%, -50%);
   }
 
   .order-confirmed {
-    display: none;
+    display: block;
   }
 }
