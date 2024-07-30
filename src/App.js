@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer } from 'react';
 import PlusIcon from './Icons/icon-increment-quantity.svg';
 import MinusIcon from './Icons/icon-decrement-quantity.svg';
 import CartIcon from './Icons/icon-add-to-cart.svg';
@@ -7,51 +7,37 @@ import EmptyCartIcon from './Icons/illustration-empty-cart.svg';
 import RemoveCartIcon from './Icons/icon-remove-item.svg';
 import CarbonNeutralIcon from './Icons/icon-carbon-neutral.svg';
 
+const initialState = {
+  products: [],
+  cart: [],
+};
+
+function reducer(state, action) {
+  console.log(state);
+
+  switch (action.type) {
+    case 'data_set': {
+      return {
+        ...state,
+        products: action.payload,
+      };
+    }
+    case 'addTocart':
+      const addProduct = state.product[action.payload];
+      return {
+        ...state,
+        cart: [...state.cart, addProduct],
+      };
+    default:
+      throw new Error('Unknown action' + action.type);
+  }
+}
+
 export default function App() {
-  const [products, setProducts] = useState([]);
-  const [isOpen, setIsOpen] = useState(true);
-  const [cart, setCart] = useState([]);
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   function AddToCart(index) {
-    setCart((prevCart) => {
-      const itemIndex = prevCart.findIndex((item) => item.index === index);
-      if (itemIndex > -1) {
-        return prevCart.map((item, i) =>
-          i === itemIndex ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      } else {
-        return [...prevCart, { ...products[index], index, quantity: 1 }];
-      }
-    });
-
-    setProducts((preProducts) =>
-      preProducts.map((product, i) =>
-        i === index && product.quantity >= 0
-          ? {
-              ...product,
-              quantity: product.quantity + 1,
-            }
-          : product
-      )
-    );
-  }
-
-  const handleRemoveFromCart = (index) => {
-    const item = cart.findIndex((item) => item.index === index);
-    if (item > -1) {
-      setCart((prevCart) => prevCart.filter((item) => item.index !== index));
-    }
-    setProducts((prevProducts) =>
-      prevProducts.map((product, i) =>
-        i === index && product.quantity >= 0
-          ? { ...product, quantity: product.quantity + (item.quantity || 0) }
-          : product
-      )
-    );
-  };
-
-  function handleOrderOpen() {
-    setIsOpen((isOpen) => !isOpen);
+    dispatch({ type: 'addTocart', payload: index });
   }
 
   useEffect(() => {
@@ -63,12 +49,12 @@ export default function App() {
           throw new Error('Newtwork response is not ok!');
         }
         const data = await res.json();
+        console.log(data);
         if (!ignore) {
-          const inializeData = data.map((product) => ({
-            ...product,
-            quantity: 0,
-          }));
-          setProducts(inializeData);
+          dispatch({
+            type: 'data_set',
+            payload: data,
+          });
         }
       } catch (error) {
         console.log('Error fetching the data', error);
@@ -79,24 +65,24 @@ export default function App() {
       };
     }
     FetchData();
-  }, [setProducts]);
+  }, []);
 
   return (
     <>
       <div className="container flex flex-col md:flex-row">
-        <Products products={products} onAddToCart={AddToCart} />
+        <Products state={state} onAddToCart={AddToCart} />
         <Cart
-          cart={cart}
-          onOrderOpen={handleOrderOpen}
-          onDeleteItem={handleRemoveFromCart}
+          state={state}
+          // onOrderOpen={handleOrderOpen}
+          // onDeleteItem={handleRemoveFromCart}
         />
       </div>
-      {isOpen && <Order onOrderOpen={handleOrderOpen} cart={cart} />}
+      {/* {isOpen && <Order onOrderOpen={handleOrderOpen} cart={cart} />} */}
     </>
   );
 }
 
-function Products({ products, onAddToCart }) {
+function Products({ state, onAddToCart }) {
   return (
     <div className="container mx-auto p-8">
       <div className="flex flex-col sm:flex-row gap-6">
@@ -105,7 +91,7 @@ function Products({ products, onAddToCart }) {
             Deserts
           </h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 grid-rows-3 gap-4">
-            {products.map((product, index) => (
+            {state.products.map((product, index) => (
               <div key={index} className="img-container">
                 <picture>
                   <source media="lg" srcSet={product.image.desktop} />
@@ -254,14 +240,14 @@ function Order({ onOrderOpen, cart }) {
   );
 }
 
-function Cart({ onOrderOpen, cart, onDeleteItem }) {
+function Cart({ onOrderOpen, state, onDeleteItem }) {
   return (
     <div className="w-[90%] h-auto mx-auto mb-8 bg-Rose-50  p-8 md:w-1/3 rounded-md md:h-[60%] md:mt-20">
       <h1 className="text-Red text-3xl font-bold">Your Cart (0)</h1>
-      {cart.length > 0 ? (
+      {state.cart.length > 0 ? (
         <CartFilled
           onOrderOpen={onOrderOpen}
-          cart={cart}
+          state={state}
           onDeleteItem={onDeleteItem}
         />
       ) : (
@@ -282,15 +268,15 @@ function EmptyCart() {
   );
 }
 
-function CartFilled({ onOrderOpen, cart, onDeleteItem }) {
-  const orderedTotal = cart
+function CartFilled({ onOrderOpen, state, onDeleteItem }) {
+  const orderedTotal = state.cart
     .reduce((total, item) => total + item.price * item.quantity, 0)
     .toFixed(2);
 
   return (
     <div className="">
       <div>
-        {cart.map((item, index) => (
+        {state.cart.map((item, index) => (
           <div
             className="flex items-center justify-between border-b-2 border-Rose-100 py-8"
             key={index}
@@ -312,7 +298,7 @@ function CartFilled({ onOrderOpen, cart, onDeleteItem }) {
             <button
               className="flex items-center justify-center border-2 border-Rose-300 w-8 h-8 rounded-full"
               onClick={() => {
-                onDeleteItem(item.index);
+                onDeleteItem(item.id);
               }}
             >
               <img
@@ -337,7 +323,7 @@ function CartFilled({ onOrderOpen, cart, onDeleteItem }) {
         <p className="text-xl text-Rose-300">
           This s a{' '}
           <span className="text-Rose-900 font-bold text-2xl">
-            carbon-nuetral
+            carbon-neutral
           </span>{' '}
           delivery
         </p>
@@ -346,7 +332,7 @@ function CartFilled({ onOrderOpen, cart, onDeleteItem }) {
         className=" bg-Red px-12 py-4 rounded-[100px] w-full text-Rose-50 hover:bg-Rose-900 text-2xl cursor-pointer"
         onClick={onOrderOpen}
       >
-        Confirmd order
+        Confirm order
       </button>
     </div>
   );
